@@ -1,38 +1,54 @@
-import React, { Component } from 'react';
-import Issue from './Issue';
+import React, { Component } from "react";
 import { Route, Link } from 'react-router-dom';
-
+import { loadData } from "../utils/loadData";
+import Issue from "./Issue";
 
 class IssueList extends Component {
-    state = {
-        issueData: [],
-    };
+state = {
+issues: [],
+};
 
-        loadData = async () => {
-            const response = await fetch("https://api.github.com/repos/facebook/create-react-app/issues");
-            const data = await response.json();
-            return data;
-        };
+async componentDidMount() {
+const issues = await loadData(
+    `https://api.github.com/repos/facebook/create-react-app/issues`
+);
 
-        async componentDidMount() {
-            const issueData = await this.loadData();
-                this.setState({
-                    issueData: issueData,
-                });
-        }
+this.setState({
+    issues,
+});
+}
 
-        render() {
-            const { issueData } = this.state;
+render() {
+const { issues } = this.state;
+
+return (
+    <>
+    {!!issues.length ? (
+        <>
+            <h1>Github Issues List</h1>
+            <Route exact path='/'>
+                <ul>
+        {issues.map((issue) => {
             return (
-                <>
-                    {
-                        issueData.map((issue) => (
-                            <Issue issue={issue} key={issue.id} />
-                        )
-                    )}
-                </>
-            )
-        }
+            <li key={issue.id}>
+                {issue.title}
+                <Link to={`/issue/${issue.number}`}>View Details</Link>
+            </li>
+            );
+        })}
+        </ul>
+            </Route>
+            <Route path={'/issue/:issue_number'}>
+                <Link to='/'>Return To List</Link>
+                <Issue issues={issues} />
+            </Route>
+        </>
+    ) : (
+        <p>Fetching issues...</p>
+    )}
+    </>
+);
+}
 }
 
 export default IssueList;
